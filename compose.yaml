@@ -1,0 +1,8 @@
+services:
+  pg:
+    image: postgis/postgis
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./databases/schemas/schemas.sql:/docker-entrypoint-initdb.d/init_db.sql
+    env_file: ".env"
