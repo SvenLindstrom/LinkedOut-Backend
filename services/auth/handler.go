@@ -20,6 +20,11 @@ type oAuthPayload struct {
 	Code string `json:"code" binding:"required"`
 }
 
+type LoginRes struct {
+	Token     string `json:"token"`
+	FirstTime bool   `json:"firstTime"`
+}
+
 func (h *AuthHandler) devLogin(c *gin.Context) {
 
 	var code oAuthPayload
@@ -30,16 +35,27 @@ func (h *AuthHandler) devLogin(c *gin.Context) {
 
 	user_id, err := h.authModel.userExists(code.Code)
 
+	var loginRes = LoginRes{FirstTime: false}
 	if err != nil {
 		user_id, err = h.authModel.creatUser(code.Code, "dev_user-"+code.Code)
 
+		loginRes = LoginRes{FirstTime: true}
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 			return
 		}
 	}
 
-	tokenRotation(c, user_id)
+	tokens, err := jwt.CreatTokenPair(user_id)
+
+	loginRes.Token = tokens.Access
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate tokens"})
+		return
+	}
+
+	c.SetCookie("linkedOut-refresh", tokens.Refresh, 3600, "/", "localhost", false, true)
+	c.JSON(http.StatusOK, loginRes)
 }
 
 func (h *AuthHandler) login(c *gin.Context) {
@@ -57,20 +73,29 @@ func (h *AuthHandler) login(c *gin.Context) {
 		return
 	}
 
-	println(googleInfo.Name)
-
 	user_id, err := h.authModel.userExists(googleInfo.ID)
 
+	var loginRes = LoginRes{FirstTime: false}
 	if err != nil {
-		user_id, err = h.authModel.creatUser(code.Code, googleInfo.Name)
+		user_id, err = h.authModel.creatUser(googleInfo.ID, googleInfo.Name)
+		loginRes = LoginRes{FirstTime: true}
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 			return
 		}
 	}
-	tokenRotation(c, user_id)
 
+	tokens, err := jwt.CreatTokenPair(user_id)
+
+	loginRes.Token = tokens.Access
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate tokens"})
+		return
+	}
+
+	c.SetCookie("linkedOut-refresh", tokens.Refresh, 3600, "/", "localhost", false, true)
+	c.JSON(http.StatusOK, loginRes)
 }
 
 func (h *AuthHandler) accessToken(c *gin.Context) {
