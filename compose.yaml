@@ -1,8 +1,32 @@
 services:
   pg:
     image: postgis/postgis
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
     volumes:
       - ./databases/schemas/schemas.sql:/docker-entrypoint-initdb.d/init_db.sql
     env_file: ".env"
+    networks:
+      - linkedOut_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d linkedout_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  linkedout:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: ".env"
+    ports:
+      - "3113:3113"
+    networks:
+      - linkedOut_net
+    depends_on:
+      pg:
+        condition: service_healthy
+
+networks:
+  linkedOut_net:
+    driver: bridge
