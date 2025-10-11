@@ -3,5 +3,6 @@ CREATE TABLE users (
 	user_id VARCHAR(50) NOT NULL,
 	name VARCHAR(50) NOT NULL,
 	connecting boolean DEFAULT false,
-	location geography(POINT, 4326)
+	location geography(POINT, 4326),
+	bio VARCHAR(250)
 );

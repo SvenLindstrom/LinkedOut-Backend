@@ -69,6 +69,12 @@ func Verify(tokeString string, audience string) (*jwt.RegisteredClaims, error) {
 		jwt.WithAudience(audience),
 		jwt.WithIssuer("linkedOut"),
 	)
+
+	if err != nil {
+		return &jwt.RegisteredClaims{}, err
+
+	}
+
 	claims := token.Claims.(*jwt.RegisteredClaims)
 	return claims, err
 }

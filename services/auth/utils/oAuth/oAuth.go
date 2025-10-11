@@ -29,7 +29,7 @@ func ExchangeCode(code string) (GoogleUser, error) {
 		Scopes:       []string{"openid"},
 		Endpoint:     google.Endpoint,
 	}
-
+	println(os.Getenv("OAUTH_REDIRECT"))
 	tok, err := conf.Exchange(context.Background(), code)
 	if err != nil {
 		return GoogleUser{}, err

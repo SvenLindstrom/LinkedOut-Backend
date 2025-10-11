@@ -12,4 +12,5 @@ func Routes(rg *gin.RouterGroup, db *sql.DB) {
 	rg.GET("access_token", h.accessToken)
 	rg.POST("login", h.login)
 	rg.POST("dev/login", h.devLogin)
+	rg.GET("logout", h.logOutUser)
 }

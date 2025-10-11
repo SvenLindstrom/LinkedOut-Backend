@@ -1,6 +1,9 @@
 
 run:
 	go run main.go
+run-auth:
+	go run main.go auth
+
 
 start:
 	sudo docker compose -f compose.dev.yaml up
