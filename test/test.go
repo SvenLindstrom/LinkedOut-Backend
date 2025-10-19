@@ -8,6 +8,18 @@ import (
 	"net/http"
 )
 
+type UserProx struct {
+	Id       string `json:"id"       binding:"required"`
+	Name     string `json:"name"     binding:"required"`
+	Bio      string `json:"bio"`
+	Distance string `json:"distance" binding:"required"`
+}
+
+type Proximity struct {
+	Location Location `json:"location" binding:"required"`
+	Distance int32    `json:"distance" binding:"required"`
+}
+
 var Home = Location{56.050248, 14.148894}
 
 var Uni = Location{56.048533, 14.145616}
@@ -22,12 +34,20 @@ func main() {
 
 	// Example POST request with JSON
 	//
-	// user1 := loginUser("123", client)
+	user1 := loginUser("123", client)
+	user1.updateLoc(PhoneDafault, client)
+	user1.updateState("true", client)
 
 	user2 := loginUser("456", client)
+	user2.updateLoc(PhoneDafault, client)
+	user2.updateState("true", client)
+
+	proxs := user2.getProx(Proximity{PhoneDafault, 50}, client)
+
+	// user2.authReq()
 
 	// user2.updateLoc(PhoneDafault, client)
-	user2.updateState("true", client)
+	// user2.updateState("true", client)
 
 	//
 	// user2.updateLoc(Uni, client)
@@ -68,7 +88,7 @@ func (u *User) authReq(method string, data any, endpoint string, client *http.Cl
 	fmt.Println("${method}  ->", string(body))
 }
 
-func (u *User) getProx(location Location, client *http.Client) {
+func (u *User) getProx(location Proximity, client *http.Client) *[]UserProx {
 	req := reqWithAuth(http.MethodPost,
 		location,
 		"http://localhost:3113/api/location",
@@ -78,9 +98,12 @@ func (u *User) getProx(location Location, client *http.Client) {
 	if err != nil {
 		panic(err)
 	}
+
+	proxs := &[]UserProx{}
 	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	fmt.Println("POST /login ->", string(body))
+
+	json.NewDecoder(resp.Body).Decode(proxs)
+	return proxs
 }
 
 func (u *User) updateState(state string, client *http.Client) {
