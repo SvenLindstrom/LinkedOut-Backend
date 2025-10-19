@@ -5,6 +5,14 @@ type Location struct {
 	Lon float64 `json:"lon" binding:"required"`
 }
 
+type Proximity struct {
+	Location Location `json:"location" binding:"required"`
+	Distance int32    `json:"distance" binding:"required"`
+}
+
 type UserProx struct {
-	Name string
+	Id       string `json:"id"       binding:"required"`
+	Name     string `json:"name"     binding:"required"`
+	Bio      string `json:"bio"`
+	Distance string `json:"distance" binding:"required"`
 }

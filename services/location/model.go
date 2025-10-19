@@ -21,11 +21,14 @@ func (m *LocationModel) UpdateStatus(id string, status bool) error {
 	return err
 }
 
-func (m *LocationModel) getProximity(id string, location Location) ([]UserProx, error) {
-	rows, err := m.DB.Query(
-		"SELECT name FROM users WHERE  connecting=true AND ST_DWithin(location, ST_SetSRID(ST_MakePoint($1, $2), 4326), 50) AND id!=$3",
-		location.Lon,
-		location.Lat,
+func (m *LocationModel) getProximity(id string, prox Proximity) ([]UserProx, error) {
+	rows, err := m.DB.Query(`
+		SELECT id, name, bio, ST_Distance(
+			location,
+		ST_SetSRID(ST_MakePoint($1, $2), 4326)) AS distance FROM users WHERE  connecting=true AND ST_DWithin(location, ST_SetSRID(ST_MakePoint($1, $2), 4326), $3) AND id!=$4 ORDER BY distance ASC`,
+		prox.Location.Lon,
+		prox.Location.Lat,
+		prox.Distance,
 		id,
 	)
 	if err != nil {
@@ -38,7 +41,7 @@ func (m *LocationModel) getProximity(id string, location Location) ([]UserProx, 
 
 		var u UserProx
 
-		if err := rows.Scan(&u.Name); err != nil {
+		if err := rows.Scan(&u.Id, &u.Name, &u.Bio, &u.Distance); err != nil {
 			return nil, err
 		}
 		users = append(users, u)
