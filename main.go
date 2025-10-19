@@ -4,6 +4,7 @@ import (
 	"linkedout/databases"
 	"linkedout/services/auth"
 	"linkedout/services/location"
+	"linkedout/services/requests"
 	"log"
 	"os"
 
@@ -32,6 +33,7 @@ func main() {
 	r := gin.Default()
 
 	pg := databases.Pg_init()
+	redis := databases.Redis_init()
 
 	authGroup := r.Group("/auth")
 
@@ -42,6 +44,7 @@ func main() {
 	api.Use(auth.TokenMiddleware())
 
 	location.Routes(api, pg)
+	requests.Routes(api, redis)
 
 	r.Run(PORT)
 }
