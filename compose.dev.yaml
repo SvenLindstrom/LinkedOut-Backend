@@ -6,3 +6,8 @@ services:
     volumes:
       - ./databases/schemas/schemas.sql:/docker-entrypoint-initdb.d/init_db.sql
     env_file: ".dev.env"
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    env_file: ".dev.env"
