@@ -19,7 +19,7 @@ type Request struct {
 
 func NewRequest(from, sender, to, receiver, message string) *Request {
 	return &Request{
-		ID:           "requests:" + uuid.NewString(),
+		ID:           uuid.NewString(),
 		From:         from,
 		SenderName:   sender,
 		To:           to,
