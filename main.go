@@ -4,11 +4,8 @@ import (
 	"linkedout/databases"
 	"linkedout/services/auth"
 	"linkedout/services/location"
-<<<<<<< HEAD
 	"linkedout/services/requests"
-=======
 	"linkedout/services/user"
->>>>>>> b3092c63d8d631ebc06b9fa91f22853479b18c72
 	"log"
 	"os"
 
@@ -56,11 +53,8 @@ func main() {
 	api := r.Group("/api")
 	api.Use(auth.TokenMiddleware())
 	location.Routes(api, pg)
-<<<<<<< HEAD
 	requests.Routes(api, redis)
-=======
 	user.Routes(api, pg)
->>>>>>> b3092c63d8d631ebc06b9fa91f22853479b18c72
 
 	r.Run(PORT)
 }
