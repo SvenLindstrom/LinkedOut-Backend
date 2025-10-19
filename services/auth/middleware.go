@@ -13,17 +13,22 @@ func TokenMiddleware() gin.HandlerFunc {
 		bearerToken := c.GetHeader("Authorization")
 
 		if bearerToken == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+			return
 		}
 
-		reqToken := strings.Split(bearerToken, " ")[1]
+		reqToken := strings.Split(bearerToken, " ")
+		if len(reqToken) < 2 {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+			return
+		}
 
-		token, err := jwt.Verify(reqToken, jwt.Access)
+		token, err := jwt.Verify(reqToken[1], jwt.Access)
 
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+			return
 		}
-
 		id := token.Subject
 		c.Set("x-user-id", id)
 		c.Next()

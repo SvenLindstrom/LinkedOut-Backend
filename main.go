@@ -4,7 +4,11 @@ import (
 	"linkedout/databases"
 	"linkedout/services/auth"
 	"linkedout/services/location"
+<<<<<<< HEAD
 	"linkedout/services/requests"
+=======
+	"linkedout/services/user"
+>>>>>>> b3092c63d8d631ebc06b9fa91f22853479b18c72
 	"log"
 	"os"
 
@@ -13,7 +17,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func loadConf() {
+func loadConf(args []string) {
 	_, set := os.LookupEnv("MODE_PROD")
 	if !set {
 		println("loading dev env")
@@ -21,12 +25,23 @@ func loadConf() {
 		if err != nil {
 			log.Fatal("failed to load .env file")
 		}
+
+		if len(args) > 0 {
+			println("loading oauth conf")
+			err := godotenv.Load(".oauth.env")
+			if err != nil {
+				log.Fatal("failed to load .env file")
+			}
+		}
+
 	}
 }
 
 func main() {
 
-	loadConf()
+	args := os.Args[1:]
+
+	loadConf(args)
 
 	PORT := ":3113"
 
@@ -36,15 +51,16 @@ func main() {
 	redis := databases.Redis_init()
 
 	authGroup := r.Group("/auth")
-
 	auth.Routes(authGroup, pg)
 
 	api := r.Group("/api")
-
 	api.Use(auth.TokenMiddleware())
-
 	location.Routes(api, pg)
+<<<<<<< HEAD
 	requests.Routes(api, redis)
+=======
+	user.Routes(api, pg)
+>>>>>>> b3092c63d8d631ebc06b9fa91f22853479b18c72
 
 	r.Run(PORT)
 }
