@@ -4,5 +4,6 @@ CREATE TABLE users (
 	name VARCHAR(50) NOT NULL,
 	connecting boolean DEFAULT false,
 	location geography(POINT, 4326),
-	bio VARCHAR(250) DEFAULT ''
+	bio VARCHAR(250) DEFAULT '',
+	deviceCode VARCHAR(250)
 );

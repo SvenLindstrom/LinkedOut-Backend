@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"linkedout/services/FCM"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -8,18 +9,19 @@ import (
 )
 
 type RequestsHandler struct {
-	rm *RequestsModel
+	rm  *RequestsModel
+	fcm fcm.FcmClient
 }
 
 type CreatePayload struct {
-	SenderName   string `json:"sender" binding:"required"`
-	To           string `json:"to" binding:"required"`
+	SenderName   string `json:"sender"   binding:"required"`
+	To           string `json:"to"       binding:"required"`
 	ReceiverName string `json:"receiver" binding:"required"`
-	Message      string `json:"message" binding:"required"`
+	Message      string `json:"message"  binding:"required"`
 }
 
 type UpdatePayload struct {
-	Status    string `json:"status" binding:"required"`
+	Status    string `json:"status"    binding:"required"`
 	RequestID string `json:"requestID" binding:"required"`
 }
 
@@ -37,11 +39,20 @@ func (rh *RequestsHandler) PostRequest(c *gin.Context) {
 		return
 	}
 
-	err := rh.rm.CreateRequest(ctx, from, payload.SenderName, payload.To, payload.ReceiverName, payload.Message)
+	err := rh.rm.CreateRequest(
+		ctx,
+		from,
+		payload.SenderName,
+		payload.To,
+		payload.ReceiverName,
+		payload.Message,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	rh.fcm.Send(from, payload.SenderName, payload.Message)
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Request created successfully"})
 }
