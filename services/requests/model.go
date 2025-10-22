@@ -16,7 +16,10 @@ func NewRequestsModel(rdb *redis.Client) *RequestsModel {
 	return &RequestsModel{rdb: rdb}
 }
 
-func (rm *RequestsModel) CreateRequest(ctx context.Context, from, sender, to, receiver, message string) error {
+func (rm *RequestsModel) CreateRequest(
+	ctx context.Context,
+	from, sender, to, receiver, message string,
+) error {
 	newRequest := NewRequest(from, sender, to, receiver, message)
 	fields := map[string]any{
 		"id":        newRequest.ID,
@@ -33,7 +36,7 @@ func (rm *RequestsModel) CreateRequest(ctx context.Context, from, sender, to, re
 	tx.HSet(ctx, "requests:"+newRequest.ID, fields)
 	tx.SAdd(ctx, "users:"+from, newRequest.ID)
 	tx.SAdd(ctx, "users:"+to, newRequest.ID)
-	tx.Expire(ctx, newRequest.ID, 30*time.Minute)
+	tx.Expire(ctx, "requests:"+newRequest.ID, 30*time.Minute)
 	_, err := tx.Exec(ctx)
 
 	if err != nil {
@@ -78,13 +81,16 @@ func (rm *RequestsModel) FindRequestsIds(ctx context.Context, userID string) ([]
 	return IDs, nil
 }
 
-func (rm *RequestsModel) FindRequestsByUser(ctx context.Context, userID string) ([]*Request, error) {
+func (rm *RequestsModel) FindRequestsByUser(
+	ctx context.Context,
+	userID string,
+) ([]*Request, error) {
 	ids, err := rm.FindRequestsIds(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	var requests []*Request
+	requests := make([]*Request, 0)
 	for _, id := range ids {
 		req, err := rm.FindRequest(ctx, id)
 		if err != nil {

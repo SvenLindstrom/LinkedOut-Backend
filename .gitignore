@@ -1,3 +1,5 @@
 .env
 .oauth.env
 firebase_key.json
+cert
+key

@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"database/sql"
 	"linkedout/services/FCM"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 
 type RequestsHandler struct {
 	rm  *RequestsModel
-	fcm fcm.FcmClient
+	fcm *fcm.FcmClient
 }
 
 type CreatePayload struct {
@@ -25,8 +26,8 @@ type UpdatePayload struct {
 	RequestID string `json:"requestID" binding:"required"`
 }
 
-func NewRequestsHandler(rdb *redis.Client) *RequestsHandler {
-	return &RequestsHandler{rm: &RequestsModel{rdb: rdb}}
+func NewRequestsHandler(rdb *redis.Client, pg *sql.DB) *RequestsHandler {
+	return &RequestsHandler{rm: &RequestsModel{rdb: rdb}, fcm: fcm.GetClient(pg)}
 }
 
 func (rh *RequestsHandler) PostRequest(c *gin.Context) {
@@ -52,7 +53,11 @@ func (rh *RequestsHandler) PostRequest(c *gin.Context) {
 		return
 	}
 
-	rh.fcm.Send(from, payload.SenderName, payload.Message)
+	err = rh.fcm.Send(payload.To, payload.SenderName, payload.Message)
+
+	if err != nil {
+		println(err.Error())
+	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Request created successfully"})
 }
@@ -92,5 +97,5 @@ func (rh *RequestsHandler) GetRequestsByUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"requests": requests})
+	c.JSON(http.StatusOK, requests)
 }

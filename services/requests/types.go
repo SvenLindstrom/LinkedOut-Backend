@@ -24,7 +24,7 @@ func NewRequest(from, sender, to, receiver, message string) *Request {
 		SenderName:   sender,
 		To:           to,
 		ReceiverName: receiver,
-		Status:       "pending",
+		Status:       "PENDING",
 		Message:      message,
 		Timestamp:    time.Now(),
 	}
