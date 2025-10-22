@@ -11,11 +11,17 @@ type UserHandler struct {
 	userModel UserModel
 }
 
+type InfoPayload struct {
+	Profession string     `json:"profession" binding:"required"`
+	Bio        string     `json:"bio" binding:"required"`
+	Interests  []Interest `json:"interests" binding:"required"`
+}
+
 func newUserHandler(db *sql.DB) UserHandler {
 	return UserHandler{userModel: UserModel{DB: db}}
 }
 
-func (h *UserHandler) getInfo(c *gin.Context) {
+func (h *UserHandler) GetInfo(c *gin.Context) {
 	user_id := c.GetString("x-user-id")
 
 	info, err := h.userModel.getInfo(user_id)
@@ -27,28 +33,29 @@ func (h *UserHandler) getInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, info)
 }
 
-func (h *UserHandler) updateBio(c *gin.Context) {
+func (uh *UserHandler) PutUserInfo(c *gin.Context) {
+	id := c.GetString("x-user-id")
 
-	type Payload struct {
-		Bio string `json:"bio"`
-	}
-
-	user_id := c.GetString("x-user-id")
-
-	var bio Payload
-	if err := c.ShouldBindJSON(&bio); err != nil {
-		println("cant bind")
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+	var payload InfoPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := h.userModel.updateBio(user_id, bio.Bio)
-
+	err := uh.userModel.SaveInfo(id, payload.Profession, payload.Bio, payload.Interests)
 	if err != nil {
-		println("cant update")
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "info updated successfully"})
+}
+
+func (uh *UserHandler) GetInterests(c *gin.Context) {
+	interests, err := uh.userModel.FindAllInterests()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, bio)
 
+	c.JSON(http.StatusOK, interests)
 }
