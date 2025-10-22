@@ -53,8 +53,12 @@ func main() {
 	api := r.Group("/api")
 	api.Use(auth.TokenMiddleware())
 	location.Routes(api, pg)
-	requests.Routes(api, redis)
+	requests.Routes(api, redis, pg)
 	user.Routes(api, pg)
 
-	r.Run(PORT)
+	if os.Getenv("DOMAIN") == "TRUE" {
+		r.RunTLS(PORT, "cert", "key")
+	} else {
+		r.Run(PORT)
+	}
 }
