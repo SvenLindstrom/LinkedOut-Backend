@@ -84,7 +84,7 @@ func (rm *RequestsModel) FindRequestsByUser(ctx context.Context, userID string) 
 		return nil, err
 	}
 
-	var requests []*Request
+	requests := make([]*Request, 0)
 	for _, id := range ids {
 		req, err := rm.FindRequest(ctx, id)
 		if err != nil {
@@ -96,7 +96,6 @@ func (rm *RequestsModel) FindRequestsByUser(ctx context.Context, userID string) 
 		}
 		requests = append(requests, req)
 	}
-	println(requests)
 	return requests, nil
 }
 
