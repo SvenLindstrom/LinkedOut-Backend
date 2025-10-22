@@ -102,7 +102,6 @@ func (rm *RequestsModel) FindRequestsByUser(
 		}
 		requests = append(requests, req)
 	}
-	println(requests)
 	return requests, nil
 }
 
