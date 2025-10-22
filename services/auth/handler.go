@@ -39,6 +39,11 @@ func (h *AuthHandler) devLogin(c *gin.Context) {
 		}
 	}
 
+	if err := h.authModel.setDeviceCode(user_id, code.DeviceCode); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		return
+	}
+
 	tokens, err := jwt.CreatTokenPair(user_id)
 
 	if err != nil {

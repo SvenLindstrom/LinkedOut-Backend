@@ -5,7 +5,8 @@ CREATE TABLE users (
 	connecting boolean DEFAULT false,
 	location geography(POINT, 4326),
 	bio VARCHAR(250),
-	profession VARCHAR(50)
+	profession VARCHAR(50),
+	deviceCode VARCHAR(250)
 );
 
 CREATE TABLE interests (

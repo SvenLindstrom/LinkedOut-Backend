@@ -21,6 +21,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 
 	id := c.GetString("x-user-id")
 	if err := c.ShouldBindJSON(&location); err != nil {
+		println("cant bind")
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
@@ -28,6 +29,7 @@ func (h *LocationHandler) UpdateLocation(c *gin.Context) {
 	err := h.locationModel.UpdateLocation(id, location)
 
 	if err != nil {
+		println("cant update")
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
@@ -53,21 +55,19 @@ func (h *LocationHandler) UpdateStatus(c *gin.Context) {
 }
 
 func (h *LocationHandler) GetProxUsers(c *gin.Context) {
-	var location Location
+	var prox Proximity
 
 	id := c.GetString("x-user-id")
 
-	if err := c.ShouldBindJSON(&location); err != nil {
+	if err := c.ShouldBindJSON(&prox); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
 
-	println(location.Lat)
-	println(location.Lon)
-
-	data, err := h.locationModel.getProximity(id, location)
+	data, err := h.locationModel.getProximity(id, prox)
 
 	if err != nil {
+		println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
