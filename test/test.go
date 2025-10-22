@@ -20,6 +20,18 @@ type Proximity struct {
 	Distance int32    `json:"distance" binding:"required"`
 }
 
+type CreatePayload struct {
+	SenderName   string `json:"sender" binding:"required"`
+	To           string `json:"to" binding:"required"`
+	ReceiverName string `json:"receiver" binding:"required"`
+	Message      string `json:"message" binding:"required"`
+}
+
+type UpdatePayload struct {
+	Status    string `json:"status" binding:"required"`
+	RequestID string `json:"requestID" binding:"required"`
+}
+
 var Home = Location{56.050248, 14.148894}
 
 var Uni = Location{56.048533, 14.145616}
@@ -42,7 +54,7 @@ func main() {
 	user2.updateLoc(PhoneDafault, client)
 	user2.updateState("true", client)
 
-	proxs := user2.getProx(Proximity{PhoneDafault, 50}, client)
+	//proxs := user2.getProx(Proximity{PhoneDafault, 50}, client)
 
 	// user2.authReq()
 
@@ -57,6 +69,25 @@ func main() {
 	// user1.getProx(Uni, client)
 	//
 	// user1.getNewAcces(client)
+
+	// p := &CreatePayload{
+	// 	SenderName:   "Bianca",
+	// 	To:           "12347",
+	// 	ReceiverName: "Sven",
+	// 	Message:      "want to hang out?",
+	// }
+
+	// u := &UpdatePayload{
+	// 	Status:    "accepted",
+	// 	RequestID: "b7b719d8-22d6-4fba-8b16-275458724a92",
+	// }
+
+	// create request
+	// user1.authReq(http.MethodPost, p, "http://localhost:3113/api/requests/", client)
+	// update request status
+	//user1.authReq(http.MethodPatch, u, "http://localhost:3113/api/requests/", client)
+	// get requests by user
+	//user1.authReq(http.MethodGet, p, "http://localhost:3113/api/requests/", client)
 
 }
 
