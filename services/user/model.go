@@ -15,14 +15,14 @@ func (m *UserModel) getInfo(id string) (UserInfo, error) {
 	var interestsJSON []byte
 
 	err := m.DB.QueryRow(
-		`SELECT id, name, bio
+		`SELECT id, name, bio, profession
 		json_agg(json_build_object('id', interests.id, 'name', interests.name)) AS interests
 		FROM users
 		JOIN users_interests ON users.id = users_interests.user_id
 		JOIN interests ON users_interests.interest_id = interests.id
 		WHERE id=$1`,
 		id,
-	).Scan(&userInfo.Id, &userInfo.Name, &userInfo.Bio, &interestsJSON)
+	).Scan(&userInfo.Id, &userInfo.Name, &userInfo.Bio, &userInfo.Profession, &interestsJSON)
 
 	if err != nil {
 		return UserInfo{}, err
@@ -43,7 +43,12 @@ func (um *UserModel) SaveInfo(userID, profession, bio string, interests []Intere
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec("UPDATE users SET profession = $1, bio = $2 WHERE id=$3", profession, bio, userID)
+	_, err = tx.Exec(
+		"UPDATE users SET profession = $1, bio = $2 WHERE id=$3",
+		profession,
+		bio,
+		userID,
+	)
 	if err != nil {
 		return err
 	}
@@ -54,7 +59,11 @@ func (um *UserModel) SaveInfo(userID, profession, bio string, interests []Intere
 	}
 
 	for _, i := range interests {
-		_, err = tx.Exec("INSERT INTO users_interests (user_id, interest_id) VALUES ($1, $2)", userID, i.Id)
+		_, err = tx.Exec(
+			"INSERT INTO users_interests (user_id, interest_id) VALUES ($1, $2)",
+			userID,
+			i.Id,
+		)
 		if err != nil {
 			return err
 		}
