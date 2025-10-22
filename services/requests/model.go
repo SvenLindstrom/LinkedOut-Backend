@@ -19,7 +19,7 @@ func NewRequestsModel(rdb *redis.Client) *RequestsModel {
 func (rm *RequestsModel) CreateRequest(
 	ctx context.Context,
 	from, sender, to, receiver, message string,
-) error {
+) (Request, error) {
 	newRequest := NewRequest(from, sender, to, receiver, message)
 	fields := map[string]any{
 		"id":        newRequest.ID,
@@ -36,14 +36,20 @@ func (rm *RequestsModel) CreateRequest(
 	tx.HSet(ctx, "requests:"+newRequest.ID, fields)
 	tx.SAdd(ctx, "users:"+from, newRequest.ID)
 	tx.SAdd(ctx, "users:"+to, newRequest.ID)
-	tx.Expire(ctx, "requests:"+newRequest.ID, 30*time.Minute)
-	_, err := tx.Exec(ctx)
+	ok, err := tx.Expire(ctx, "requests:"+newRequest.ID, 30*time.Minute).Result()
+	if err != nil {
+		println("error when adding expiration")
+	}
+	if ok {
+		println("added 30 min expiration successfully")
+	}
+	_, err = tx.Exec(ctx)
 
 	if err != nil {
-		return err
+		return *newRequest, err
 	}
 
-	return nil
+	return *newRequest, nil
 }
 
 func (rm *RequestsModel) CheckRequestMember(ctx context.Context, userID, requestID string) bool {

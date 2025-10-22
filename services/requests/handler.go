@@ -2,7 +2,7 @@ package requests
 
 import (
 	"database/sql"
-	"linkedout/services/FCM"
+	fcm "linkedout/services/FCM"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +40,7 @@ func (rh *RequestsHandler) PostRequest(c *gin.Context) {
 		return
 	}
 
-	err := rh.rm.CreateRequest(
+	req, err := rh.rm.CreateRequest(
 		ctx,
 		from,
 		payload.SenderName,
@@ -59,7 +59,7 @@ func (rh *RequestsHandler) PostRequest(c *gin.Context) {
 		println(err.Error())
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Request created successfully"})
+	c.JSON(http.StatusCreated, req)
 }
 
 func (rh *RequestsHandler) PatchStatus(c *gin.Context) {
