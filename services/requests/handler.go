@@ -53,7 +53,7 @@ func (rh *RequestsHandler) PostRequest(c *gin.Context) {
 		return
 	}
 
-	err = rh.fcm.Send(payload.To, payload.SenderName, payload.Message)
+	err = rh.fcm.Send(payload.SenderName, payload.Message, payload.To, true, ToMap(req))
 
 	if err != nil {
 		println(err.Error())
@@ -83,8 +83,22 @@ func (rh *RequestsHandler) PatchStatus(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Request status updated successfully"})
+	updatedRequest, err := rh.rm.FindRequest(ctx, payload.RequestID)
 
+	if err != nil {
+		println("failed notification could not find request")
+	}
+
+	notify := payload.Status == "ACCEPTED"
+	rh.fcm.Send(
+		updatedRequest.ReceiverName,
+		"Requst Accepted",
+		updatedRequest.From,
+		notify,
+		ToMap(*updatedRequest),
+	)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Request status updated successfully"})
 }
 
 func (rh *RequestsHandler) GetRequestsByUser(c *gin.Context) {

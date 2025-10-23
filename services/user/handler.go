@@ -13,8 +13,8 @@ type UserHandler struct {
 
 type InfoPayload struct {
 	Profession string     `json:"profession" binding:"required"`
-	Bio        string     `json:"bio" binding:"required"`
-	Interests  []Interest `json:"interests" binding:"required"`
+	Bio        string     `json:"bio"        binding:"required"`
+	Interests  []Interest `json:"interests"  binding:"required"`
 }
 
 func newUserHandler(db *sql.DB) UserHandler {
@@ -44,7 +44,9 @@ func (uh *UserHandler) PutUserInfo(c *gin.Context) {
 
 	err := uh.userModel.SaveInfo(id, payload.Profession, payload.Bio, payload.Interests)
 	if err != nil {
+		println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "info updated successfully"})

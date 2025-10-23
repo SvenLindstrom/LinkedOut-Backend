@@ -25,7 +25,7 @@ func loadConf(args []string) {
 
 		if len(args) > 0 {
 			println("loading oauth conf")
-			err := godotenv.Load(".oauth.env")
+			err := godotenv.Load(".auth.env")
 			if err != nil {
 				log.Fatal("failed to load .env file")
 			}
@@ -52,6 +52,7 @@ func main() {
 
 	api := r.Group("/api")
 	api.Use(auth.TokenMiddleware())
+
 	location.Routes(api, pg)
 	requests.Routes(api, redis, pg)
 	user.Routes(api, pg)

@@ -29,3 +29,17 @@ func NewRequest(from, sender, to, receiver, message string) *Request {
 		Timestamp:    time.Now(),
 	}
 }
+
+func ToMap(request Request) map[string]string {
+	fields := map[string]string{
+		"id":        request.ID,
+		"origin":    request.From,
+		"sender":    request.SenderName,
+		"to":        request.To,
+		"receiver":  request.ReceiverName,
+		"status":    request.Status,
+		"message":   request.Message,
+		"timestamp": request.Timestamp.Format(time.RFC3339),
+	}
+	return fields
+}

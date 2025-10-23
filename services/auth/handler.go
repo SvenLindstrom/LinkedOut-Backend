@@ -2,6 +2,7 @@ package auth
 
 import (
 	"database/sql"
+	"fmt"
 	"linkedout/services/auth/utils/JWT"
 	"linkedout/services/auth/utils/oAuth"
 	"net/http"
@@ -58,7 +59,90 @@ func (h *AuthHandler) devLogin(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func (h *AuthHandler) login(c *gin.Context) {
+func (h *AuthHandler) loginLinkedin(c *gin.Context) {
+	println("stargin loginLinkedin")
+	code := c.Query("code")
+	if code == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "missing code"})
+		return
+	}
+	println("got code")
+	userInfo, err := oauth.ExchangeCode(code, oauth.LINKEDIN)
+
+	println("fot info")
+	println(userInfo.Name)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		return
+	}
+
+	user_id, err := h.authModel.userExists(userInfo.Id)
+	var new = false
+	if err != nil {
+		user_id, err = h.authModel.creatUser(userInfo.Id, userInfo.Name)
+		new = true
+
+		if err != nil {
+			println("failed insertion")
+			println(err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+			return
+		}
+	}
+	println("generating token")
+	token, err := jwt.NewAuthToken(user_id)
+
+	println("got token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		return
+	}
+
+	redirect := fmt.Sprintf(
+		"com.example.linkedout://auth/callback?token=%s&firstTime=%t",
+		token,
+		new,
+	)
+
+	println("redirectin")
+	c.Redirect(http.StatusTemporaryRedirect, redirect)
+}
+
+func (h *AuthHandler) linkinCallback(c *gin.Context) {
+	println("in call back")
+	var payload oAuthPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		return
+	}
+
+	println("verifying token")
+	tok, err := jwt.Verify(payload.Code, jwt.AuthCode)
+	if err != nil {
+		println(err.Error())
+		c.JSON(http.StatusForbidden, gin.H{"message": "invalid Auth"})
+		return
+	}
+
+	println("token verifyed")
+	tokens, err := jwt.CreatTokenPair(tok.Subject)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate tokens"})
+		return
+	}
+
+	println("created new token pair")
+	userInfoRes := UserInfo{Name: ""}
+
+	res := LoginRes{tokens.Access, false, userInfoRes}
+
+	println(res.UserInfo.Name)
+	setCookie(c, tokens.Refresh)
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *AuthHandler) loginGoogle(c *gin.Context) {
 
 	var code oAuthPayload
 	if err := c.ShouldBindJSON(&code); err != nil {
@@ -67,21 +151,20 @@ func (h *AuthHandler) login(c *gin.Context) {
 		return
 	}
 
-	googleInfo, err := oauth.ExchangeCode(code.Code)
+	userInfo, err := oauth.ExchangeCode(code.Code, oauth.GOOGLE)
 	if err != nil {
-		println("failed exchange")
-		println(code.Code)
-		println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
+	h.handleUserLogin(UserInfo{Id: userInfo.Id, Name: userInfo.Name}, c)
+}
 
-	user_id, err := h.authModel.userExists(googleInfo.ID)
+func (h *AuthHandler) handleUserLogin(userInfo UserInfo, c *gin.Context) {
+	user_id, err := h.authModel.userExists(userInfo.Id)
 
 	var new = false
-
 	if err != nil {
-		user_id, err = h.authModel.creatUser(googleInfo.ID, googleInfo.Name)
+		user_id, err = h.authModel.creatUser(userInfo.Id, userInfo.Name)
 		new = true
 
 		if err != nil {
@@ -98,9 +181,9 @@ func (h *AuthHandler) login(c *gin.Context) {
 		return
 	}
 
-	userInfo := UserInfo{Name: googleInfo.Name}
+	userInfoRes := UserInfo{Name: userInfo.Name}
 
-	res := LoginRes{tokens.Access, new, userInfo}
+	res := LoginRes{tokens.Access, new, userInfoRes}
 
 	setCookie(c, tokens.Refresh)
 	c.JSON(http.StatusOK, res)
