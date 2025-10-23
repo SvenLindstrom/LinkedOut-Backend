@@ -15,13 +15,15 @@ type Tokens struct {
 }
 
 const (
-	Refresh string = "refresh"
-	Access  string = "access"
+	Refresh  string = "refresh"
+	Access   string = "access"
+	AuthCode string = "authCode"
 )
 
 var keys = map[string][]byte{
-	Refresh: []byte(os.Getenv("TOKEN_REFRESH_KEY")),
-	Access:  []byte(os.Getenv("TOKEN_ACCESS_KEY")),
+	Refresh:  []byte(os.Getenv("TOKEN_REFRESH_KEY")),
+	Access:   []byte(os.Getenv("TOKEN_ACCESS_KEY")),
+	AuthCode: []byte(os.Getenv("TOKEN_AUTH_KEY")),
 }
 
 func CreatTokenPair(id string) (Tokens, error) {
@@ -45,6 +47,12 @@ func newClaims(audience string, subject string) jwt.RegisteredClaims {
 		ID:        uuid.NewString(),
 		Audience:  []string{audience},
 	}
+}
+
+func NewAuthToken(id string) (string, error) {
+	claim := newClaims(Access, id)
+	token, err := Sign(claim)
+	return token, err
 }
 
 func newRefreshToken(id string) (string, error) {
