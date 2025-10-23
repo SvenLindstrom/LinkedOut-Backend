@@ -31,20 +31,36 @@ func GetClient(pg *sql.DB) *FcmClient {
 	return &FcmClient{client: client, DB: pg}
 }
 
-func (f *FcmClient) Send(to string, name string, message string) error {
+func (f *FcmClient) Send(
+	title string,
+	message string,
+	reciver string,
+	notify bool,
+	request map[string]string,
+) error {
 
-	token, err := f.getDeviceCode(to)
+	token, err := f.getDeviceCode(reciver)
 
 	if err != nil {
 		return err
 	}
-	println(token)
 
-	conf := toNotification(name, message)
-	msg := messaging.Message{Android: &conf, Token: token}
+	var msg messaging.Message
+
+	if notify {
+		conf := toNotification(title, message)
+		msg = messaging.Message{Android: &conf, Token: token, Data: request}
+	} else {
+		msg = messaging.Message{Token: token, Data: request}
+	}
 
 	ctx := context.Background()
-	f.client.Send(ctx, &msg)
+	mss, err := f.client.Send(ctx, &msg)
+	if err != nil {
+		println(err.Error())
+	} else {
+		println(mss)
+	}
 
 	return nil
 }
