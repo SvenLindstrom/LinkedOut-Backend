@@ -4,6 +4,11 @@ run:
 run-auth:
 	go run main.go auth
 
+start_test:
+	sudo docker compose -f compose.test.yaml up
+
+stop_test:
+	sudo docker compose -f compose.test.yaml down
 
 start:
 	sudo docker compose -f compose.dev.yaml up

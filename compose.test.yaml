@@ -1,0 +1,13 @@
+services:
+  pg_test:
+    image: postgis/postgis
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./databases/schemas/test_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    env_file: ".test.env"
+  redis_test:
+    image: redis
+    ports:
+      - "6380:6379"
+    env_file: ".test.env"
