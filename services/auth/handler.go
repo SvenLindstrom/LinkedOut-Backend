@@ -52,7 +52,7 @@ func (h *AuthHandler) devLogin(c *gin.Context) {
 		return
 	}
 
-	userInfo := UserInfo{Id: user_id, Name: "testname"}
+	userInfo := UserInfo{Id: user_id, Name: "dev_user-" + code.Code}
 	res := LoginRes{tokens.Access, new, userInfo}
 
 	setCookie(c, tokens.Refresh)
