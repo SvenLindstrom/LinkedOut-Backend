@@ -27,9 +27,6 @@ func TestGetInterests(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.NotEmpty(t, interests, "expected at least one interest")
-	for _, i := range interests {
-		t.Logf("Interest: %s (%s)", i.Name, i.Id)
-	}
 }
 
 func TestGetUserInfo(t *testing.T) {

@@ -50,6 +50,33 @@ type LoginResponse struct {
 	UserInfo UserInfo `json:"userInfo"`
 }
 
+type Proximity struct {
+	Location Location `json:"location" binding:"required"`
+	Distance int32    `json:"distance" binding:"required"`
+}
+
+type UserProx struct {
+	Id         string     `json:"id"         binding:"required"`
+	Name       string     `json:"name"       binding:"required"`
+	Bio        string     `json:"bio"`
+	Distance   string     `json:"distance"   binding:"required"`
+	Profession string     `json:"profession"`
+	Tags       []Interest `json:"tags"`
+}
+
+type CreatePayload struct {
+	SenderName   string `json:"sender" binding:"required"`
+	To           string `json:"to" binding:"required"`
+	ReceiverName string `json:"receiver" binding:"required"`
+	Message      string `json:"message" binding:"required"`
+}
+
+var Home = Location{56.050248, 14.148894}
+
+var Uni = Location{56.048533, 14.145616}
+
+var PhoneDafault = Location{37.4219983, -122.084}
+
 func PgTestInit() *sql.DB {
 	pwd := os.Getenv("POSTGRES_PASSWORD")
 	name := os.Getenv("POSTGRES_DB")
@@ -114,9 +141,15 @@ func Login(code string, t *testing.T) User {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, loginRes.Token, "expected non-empty access token")
 
-	println(loginRes.UserInfo.Id)
-
 	return User{Token: loginRes.Token, Refresh: refresh, Client: client}
+}
+
+func (u *User) UpdateLocation(loc Location) {
+	u.authRequest(http.MethodPatch, "http://localhost:3113/api/location", loc)
+}
+
+func (u *User) UpdateState(state string) {
+	u.authRequest(http.MethodPatch, "http://localhost:3113/api/location/status/"+state, nil)
 }
 
 func (u *User) authRequest(method string, endpoint string, data any) (*http.Response, error) {
