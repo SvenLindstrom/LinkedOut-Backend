@@ -67,10 +67,10 @@ INSERT INTO users_interests (user_id, interest_id) VALUES
 -- Charlie Demo
 INSERT INTO users_interests (user_id, interest_id) VALUES
 ('cccc3333-cccc-cccc-cccc-cccccccccccc', '22222222-2222-2222-2222-222222222222'),
-('cccc3333-cccc-cccc-cccc-cccccccccccc', '44444444-4444-4444-4444-444444444444'),
+('cccc3333-cccc-cccc-cccc-cccccccccccc', '66666666-6666-6666-6666-666666666666'),
 ('cccc3333-cccc-cccc-cccc-cccccccccccc', '88888888-8888-8888-8888-888888888888'),
 ('cccc3333-cccc-cccc-cccc-cccccccccccc', '33333333-3333-3333-3333-333333333333'),
-('cccc3333-cccc-cccc-cccc-cccccccccccc', '11111111-1111-1111-1111-111111111111');
+('cccc3333-cccc-cccc-cccc-cccccccccccc', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
 
 -- Dana Sample
 INSERT INTO users_interests (user_id, interest_id) VALUES
