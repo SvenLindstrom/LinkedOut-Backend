@@ -2,14 +2,30 @@ package oauth
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/linkedin"
 )
 
-type GoogleUser struct {
+const (
+	GOOGLE   string = "google"
+	LINKEDIN string = "linkedin"
+)
+
+type UserInfo struct {
+	Id   string
+	Name string
+}
+
+type OAuthRes interface {
+	ToUserInfo(body io.Reader) UserInfo
+}
+
+type GoogleUserInfo struct {
 	ID            string `json:"id"`
 	Email         string `json:"email"`
 	VerifiedEmail bool   `json:"verified_email"`
@@ -20,8 +36,40 @@ type GoogleUser struct {
 	Locale        string `json:"locale"`
 }
 
-func ExchangeCode(code string) (GoogleUser, error) {
+type LinkedInUserInfo struct {
+	Sub           string `json:"sub"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Picture       string `json:"picture"`
+	Locale        string `json:"locale"`
+}
 
+func (u LinkedInUserInfo) ToUserInfo(body io.Reader) UserInfo {
+	json.NewDecoder(body).Decode(&u)
+	return UserInfo{
+		Id:   "linkedin_" + u.Sub,
+		Name: u.Name,
+	}
+}
+
+func (u GoogleUserInfo) ToUserInfo(body io.Reader) UserInfo {
+	json.NewDecoder(body).Decode(&u)
+	return UserInfo{
+		Id:   "google_" + u.ID,
+		Name: u.Name,
+	}
+}
+
+type OAuthConfig struct {
+	Config   *oauth2.Config
+	Endpoint string
+	Res      OAuthRes
+}
+
+func getGoogleConf() OAuthConfig {
 	conf := &oauth2.Config{
 		ClientID:     os.Getenv("OAUTH_ID"),
 		ClientSecret: os.Getenv("OAUTH_SECRET"),
@@ -29,22 +77,53 @@ func ExchangeCode(code string) (GoogleUser, error) {
 		Scopes:       []string{"openid"},
 		Endpoint:     google.Endpoint,
 	}
-	println(os.Getenv("OAUTH_REDIRECT"))
-	tok, err := conf.Exchange(context.Background(), code)
+	endpoint := "https://www.googleapis.com/oauth2/v2/userinfo"
+	var googleUser GoogleUserInfo
+	return OAuthConfig{Config: conf, Endpoint: endpoint, Res: googleUser}
+}
+
+func getLinkedinConf() OAuthConfig {
+	conf := &oauth2.Config{
+		ClientID:     os.Getenv("OAUTH_LINKEDIN_ID"),
+		ClientSecret: os.Getenv("OAUTH_LINKEDIN_SECRET"),
+		RedirectURL:  "https://svenlindstroem.dev/auth/linkedin",
+		Scopes:       []string{"openid"},
+		Endpoint:     linkedin.Endpoint,
+	}
+	endpoint := "https://api.linkedin.com/v2/userinfo"
+	return OAuthConfig{Config: conf, Endpoint: endpoint}
+}
+
+func getConf(provider string) OAuthConfig {
+	if provider == GOOGLE {
+		return getGoogleConf()
+	} else {
+		return getLinkedinConf()
+	}
+}
+
+func ExchangeCode(code string, provider string) (UserInfo, error) {
+	println("starting exchange")
+	authConfig := getConf(provider)
+	tok, err := authConfig.Config.Exchange(context.Background(), code)
 	if err != nil {
-		return GoogleUser{}, err
+		println(err.Error())
+		return UserInfo{}, err
 	}
 
-	client := conf.Client(context.Background(), tok)
+	println("got token")
+	client := authConfig.Config.Client(context.Background(), tok)
 
-	res, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	res, err := client.Get(authConfig.Endpoint)
 	if err != nil {
-		return GoogleUser{}, err
+		return UserInfo{}, err
 	}
+	println("got data")
 	defer res.Body.Close()
 
-	var userinfo GoogleUser
-	json.NewDecoder(res.Body).Decode(&userinfo)
+	println("converting to user info")
+	info := authConfig.Res.ToUserInfo(res.Body)
 
-	return userinfo, nil
+	println(info.Name)
+	return info, nil
 }

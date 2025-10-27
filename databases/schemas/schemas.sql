@@ -4,8 +4,8 @@ CREATE TABLE users (
 	name VARCHAR(50) NOT NULL,
 	connecting boolean DEFAULT false,
 	location geography(POINT, 4326),
-	bio VARCHAR(250),
-	profession VARCHAR(50),
+	bio VARCHAR(250) DEFAULT '',
+	profession VARCHAR(50) DEFAULT '',
 	deviceCode VARCHAR(250)
 );
 
@@ -86,6 +86,6 @@ CREATE TABLE users_interests (
 	user_id UUID NOT NULL,
 	interest_id UUID NOT NULL,
 	PRIMARY KEY (user_id, interest_id),
-	FOREIGN KEY user_id REFERENCES users(id),
-	FOREIGN KEY interest_id REFERENCES interests(id)
+	FOREIGN KEY (user_id) REFERENCES users(id),
+	FOREIGN KEY (interest_id) REFERENCES interests(id)
 );
