@@ -36,13 +36,12 @@ func (m *LocationModel) getProximity(id string, prox Proximity) ([]UserProx, err
 				json_build_object(
 					'id', i.id,
 					'name', i.name
-				)),
-				'[]'::json
+				))
 			) AS matching_interests
 			FROM users u
 			LEFT JOIN users_interests ui ON u.id = ui.user_id
 			LEFT JOIN interests i ON ui.interest_id = i.id
-			WHERE 
+			WHERE
 				u.connecting = TRUE
 				AND u.id != $4
 				AND ST_DWithin(
@@ -71,17 +70,18 @@ func (m *LocationModel) getProximity(id string, prox Proximity) ([]UserProx, err
 	users := make([]UserProx, 0)
 	for rows.Next() {
 
-		var u UserProx
+		var u UserInfo
+		var d string
 
-		if err := rows.Scan(&u.Id, &u.Name, &u.Bio, &u.Profession, &u.Distance, &matchingInterestsJSON); err != nil {
+		if err := rows.Scan(&u.Id, &u.Name, &u.Bio, &u.Profession, &d, &matchingInterestsJSON); err != nil {
 			return nil, err
 		}
 
-		err = json.Unmarshal(matchingInterestsJSON, &u.Tags)
+		err = json.Unmarshal(matchingInterestsJSON, &u.Interests)
 		if err != nil {
 			return nil, err
 		}
-		users = append(users, u)
+		users = append(users, UserProx{Info: u, Distance: d})
 	}
 	return users, err
 }
