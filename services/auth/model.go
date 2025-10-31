@@ -26,6 +26,13 @@ func (m *AuthModel) creatUser(id string, name string) (string, error) {
 	return user_id, err
 }
 
+func (m *AuthModel) getUserName(id string) (string, error) {
+	var name string
+	err := m.DB.QueryRow("SELECT name FROM users WHERE user_id=$1", id).
+		Scan(&name)
+	return name, err
+}
+
 func (m *AuthModel) setDeviceCode(id string, deviceCode string) error {
 	_, err := m.DB.Exec("UPDATE users SET deviceCode=$1 WHERE id=$2", deviceCode, id)
 	return err

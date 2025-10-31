@@ -90,6 +90,7 @@ func (h *AuthHandler) loginLinkedin(c *gin.Context) {
 			return
 		}
 	}
+
 	println("generating token")
 	token, err := jwt.NewAuthToken(user_id)
 
@@ -100,7 +101,7 @@ func (h *AuthHandler) loginLinkedin(c *gin.Context) {
 	}
 
 	redirect := fmt.Sprintf(
-		"com.example.linkedout://auth/callback?token=%s&firstTime=%t",
+		"auth.example.linkedout://auth/callback?token=%s&firstTime=%t",
 		token,
 		new,
 	)
@@ -132,8 +133,20 @@ func (h *AuthHandler) linkinCallback(c *gin.Context) {
 		return
 	}
 
+	if err := h.authModel.setDeviceCode(tok.Subject, payload.DeviceCode); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		return
+	}
+
+	name, err := h.authModel.getUserName(tok.Subject)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to get name"})
+		return
+	}
+
 	println("created new token pair")
-	userInfoRes := UserInfo{Name: ""}
+
+	userInfoRes := UserInfo{Name: name}
 
 	res := LoginRes{tokens.Access, false, userInfoRes}
 
@@ -156,10 +169,11 @@ func (h *AuthHandler) loginGoogle(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
-	h.handleUserLogin(UserInfo{Id: userInfo.Id, Name: userInfo.Name}, c)
+
+	h.handleUserLogin(UserInfo{Id: userInfo.Id, Name: userInfo.Name}, code.DeviceCode, c)
 }
 
-func (h *AuthHandler) handleUserLogin(userInfo UserInfo, c *gin.Context) {
+func (h *AuthHandler) handleUserLogin(userInfo UserInfo, deviceCode string, c *gin.Context) {
 	user_id, err := h.authModel.userExists(userInfo.Id)
 
 	var new = false
@@ -178,6 +192,12 @@ func (h *AuthHandler) handleUserLogin(userInfo UserInfo, c *gin.Context) {
 	tokens, err := jwt.CreatTokenPair(user_id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate tokens"})
+		return
+	}
+
+	if err := h.authModel.setDeviceCode(user_id, deviceCode); err != nil {
+		println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
 

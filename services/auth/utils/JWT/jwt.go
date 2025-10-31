@@ -50,7 +50,7 @@ func newClaims(audience string, subject string) jwt.RegisteredClaims {
 }
 
 func NewAuthToken(id string) (string, error) {
-	claim := newClaims(Access, id)
+	claim := newClaims(AuthCode, id)
 	token, err := Sign(claim)
 	return token, err
 }

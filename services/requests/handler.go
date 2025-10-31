@@ -90,13 +90,17 @@ func (rh *RequestsHandler) PatchStatus(c *gin.Context) {
 	}
 
 	notify := payload.Status == "ACCEPTED"
-	rh.fcm.Send(
+	err = rh.fcm.Send(
 		updatedRequest.ReceiverName,
 		"Requst Accepted",
 		updatedRequest.From,
 		notify,
 		ToMap(*updatedRequest),
 	)
+
+	if err != nil {
+		println(err.Error())
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Request status updated successfully"})
 }

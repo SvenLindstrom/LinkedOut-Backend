@@ -11,12 +11,16 @@ type Proximity struct {
 }
 
 type UserProx struct {
-	Id         string     `json:"id"         binding:"required"`
-	Name       string     `json:"name"       binding:"required"`
-	Bio        string     `json:"bio"`
-	Distance   string     `json:"distance"   binding:"required"`
+	Info     UserInfo `json:"info"     binding:"required"`
+	Distance string   `json:"distance" binding:"required"`
+}
+
+type UserInfo struct {
+	Id         string     `json:"id"`
+	Name       string     `json:"name"`
 	Profession string     `json:"profession"`
-	Tags       []Interest `json:"tags"`
+	Bio        string     `json:"bio"`
+	Interests  []Interest `json:"interests"`
 }
 
 type Interest struct {

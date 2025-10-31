@@ -91,7 +91,9 @@ func getLinkedinConf() OAuthConfig {
 		Endpoint:     linkedin.Endpoint,
 	}
 	endpoint := "https://api.linkedin.com/v2/userinfo"
-	return OAuthConfig{Config: conf, Endpoint: endpoint}
+	var linkedinUser LinkedInUserInfo
+
+	return OAuthConfig{Config: conf, Endpoint: endpoint, Res: linkedinUser}
 }
 
 func getConf(provider string) OAuthConfig {
@@ -121,7 +123,11 @@ func ExchangeCode(code string, provider string) (UserInfo, error) {
 	println("got data")
 	defer res.Body.Close()
 
-	println("converting to user info")
+	println(res.Body)
+
+	// body, _ := io.ReadAll(res.Body)
+	// fmt.Println("POST /login ->", string(body))
+
 	info := authConfig.Res.ToUserInfo(res.Body)
 
 	println(info.Name)
