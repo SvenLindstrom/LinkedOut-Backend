@@ -70,8 +70,9 @@ func toNotification(name string, message string) messaging.AndroidConfig {
 		Title:       name,
 		Body:        message,
 		ClickAction: "OPEN_REQUESTS",
+		ChannelID:   "fcm_alerts",
 	}
-	return messaging.AndroidConfig{Notification: &notification}
+	return messaging.AndroidConfig{Notification: &notification, CollapseKey: "request"}
 }
 
 func (f *FcmClient) getDeviceCode(id string) (string, error) {

@@ -3,6 +3,7 @@ package requests
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -29,7 +30,7 @@ func (rm *RequestsModel) CreateRequest(
 		"receiver":  newRequest.ReceiverName,
 		"status":    newRequest.Status,
 		"message":   newRequest.Message,
-		"timestamp": newRequest.Timestamp.Format(time.RFC3339),
+		"timestamp": newRequest.Timestamp,
 	}
 
 	tx := rm.rdb.TxPipeline()
@@ -67,7 +68,7 @@ func (rm *RequestsModel) CheckRequestMember(ctx context.Context, userID, request
 
 func (rm *RequestsModel) UpdateRequestStatus(ctx context.Context, requestID, status string) error {
 	tx := rm.rdb.TxPipeline()
-	tx.HSet(ctx, "requests:"+requestID, "status", status)
+	tx.HSet(ctx, "requests:"+requestID, "status", status, "timestamp", time.Now().Unix())
 	tx.Expire(ctx, "requests:"+requestID, 30*time.Minute)
 	_, err := tx.Exec(ctx)
 
@@ -121,9 +122,11 @@ func (rm *RequestsModel) FindRequest(ctx context.Context, requestID string) (*Re
 		return nil, fmt.Errorf("request ID expired")
 	}
 
-	time, err := time.Parse(time.RFC3339, val["timestamp"])
+	i, err := strconv.ParseInt(val["timestamp"], 10, 64)
+
 	if err != nil {
-		return nil, fmt.Errorf("could not parse timestamp")
+		println(err.Error())
+		return nil, fmt.Errorf("failed to parse time")
 	}
 
 	req := &Request{
@@ -134,7 +137,7 @@ func (rm *RequestsModel) FindRequest(ctx context.Context, requestID string) (*Re
 		ReceiverName: val["receiver"],
 		Status:       val["status"],
 		Message:      val["message"],
-		Timestamp:    time,
+		Timestamp:    i,
 	}
 
 	return req, nil
