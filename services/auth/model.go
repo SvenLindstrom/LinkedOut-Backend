@@ -28,7 +28,7 @@ func (m *AuthModel) creatUser(id string, name string) (string, error) {
 
 func (m *AuthModel) getUserName(id string) (string, error) {
 	var name string
-	err := m.DB.QueryRow("SELECT name FROM users WHERE user_id=$1", id).
+	err := m.DB.QueryRow("SELECT name FROM users WHERE id=$1", id).
 		Scan(&name)
 	return name, err
 }

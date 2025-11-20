@@ -86,6 +86,6 @@ CREATE TABLE users_interests (
 	user_id UUID NOT NULL,
 	interest_id UUID NOT NULL,
 	PRIMARY KEY (user_id, interest_id),
-	FOREIGN KEY (user_id) REFERENCES users(id),
+	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 	FOREIGN KEY (interest_id) REFERENCES interests(id)
 );
