@@ -1,6 +1,8 @@
 services:
   pg:
     image: postgis/postgis
+    networks:
+      - linkedOut_net_test
     ports:
       - "5432:5432"
     volumes:
@@ -8,6 +10,11 @@ services:
     env_file: ".dev.env"
   redis:
     image: redis
+    networks:
+      - linkedOut_net_test
     ports:
       - "6379:6379"
     env_file: ".dev.env"
+networks:
+  linkedOut_net_test:
+    driver: bridge
