@@ -8,6 +8,7 @@ type UserInfo struct {
 type oAuthPayload struct {
 	Code       string `json:"code"       binding:"required"`
 	DeviceCode string `json:"deviceCode" binding:"required"`
+	Provider   string `json:"provider"   binding:"required"`
 }
 
 type LoginRes struct {
