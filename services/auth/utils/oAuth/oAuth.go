@@ -5,7 +5,7 @@ import (
 )
 
 func ExchangeCode(code string, provider string) (UserInfo, error) {
-	authConfig := getConfig[provider]
+	authConfig := getConfig[provider]()
 	tok, err := authConfig.Config.Exchange(context.Background(), code)
 	if err != nil {
 		println(err.Error())

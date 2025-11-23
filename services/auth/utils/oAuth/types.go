@@ -6,9 +6,9 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var getConfig = map[string]OAuthConfig{
-	"google":   getGoogleConf(),
-	"linkedin": getLinkedinConf(),
+var getConfig = map[string]func() OAuthConfig{
+	"google":   getGoogleConf,
+	"linkedin": getLinkedinConf,
 }
 
 type OAuthConfig struct {
