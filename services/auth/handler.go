@@ -23,152 +23,39 @@ func (h *AuthHandler) devLogin(c *gin.Context) {
 
 	var code oAuthPayload
 	if err := c.ShouldBindJSON(&code); err != nil {
-		println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
 
-	user_id, err := h.authModel.userExists("dev_user")
-
-	var new = false
-	if err != nil {
-		user_id, err = h.authModel.creatUser("dev_user", "dev_user")
-		new = true
-		if err != nil {
-			println(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
-			return
-		}
-	}
-
-	if err := h.authModel.setDeviceCode(user_id, code.DeviceCode); err != nil {
-		println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
-		return
-	}
-
-	tokens, err := jwt.CreatTokenPair(user_id)
-
-	if err != nil {
-		println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate tokens"})
-		return
-	}
-
-	userInfo := UserInfo{Id: user_id, Name: "dev_user-" + code.Code}
-	res := LoginRes{tokens.Access, new, userInfo}
-
-	setCookie(c, tokens.Refresh)
-	c.JSON(http.StatusOK, res)
+	userInfo := UserInfo{Id: "dev_user", Name: "dev_user"}
+	h.handleUserLogin(userInfo, code.DeviceCode, c)
 }
 
-func (h *AuthHandler) loginLinkedin(c *gin.Context) {
+func (h *AuthHandler) linkedinRedirect(c *gin.Context) {
 	println("stargin loginLinkedin")
 	code := c.Query("code")
 	if code == "" {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "missing code"})
 		return
 	}
-	println("got code")
-	userInfo, err := oauth.ExchangeCode(code, oauth.LINKEDIN)
-
-	println("fot info")
-	println(userInfo.Name)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
-		return
-	}
-
-	user_id, err := h.authModel.userExists(userInfo.Id)
-	var new = false
-	if err != nil {
-		user_id, err = h.authModel.creatUser(userInfo.Id, userInfo.Name)
-		new = true
-
-		if err != nil {
-			println("failed insertion")
-			println(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
-			return
-		}
-	}
-
-	println("generating token")
-	println(user_id)
-	token, err := jwt.NewAuthToken(user_id)
-
-	println("got token")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
-		return
-	}
 
 	redirect := fmt.Sprintf(
-		"auth.example.linkedout://auth/callback?token=%s&firstTime=%t",
-		token,
-		new,
+		"auth.example.linkedout://auth/callback?authCode=%s",
+		code,
 	)
 
 	println("redirectin")
 	c.Redirect(http.StatusTemporaryRedirect, redirect)
 }
 
-func (h *AuthHandler) linkinCallback(c *gin.Context) {
-	println("in call back")
-	var payload oAuthPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
-		return
-	}
-
-	println("verifying token")
-	tok, err := jwt.Verify(payload.Code, jwt.AuthCode)
-	if err != nil {
-		println(err.Error())
-		c.JSON(http.StatusForbidden, gin.H{"message": "invalid Auth"})
-		return
-	}
-
-	println("token verifyed")
-	tokens, err := jwt.CreatTokenPair(tok.Subject)
-	if err != nil {
-		println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to generate tokens"})
-		return
-	}
-
-	if err := h.authModel.setDeviceCode(tok.Subject, payload.DeviceCode); err != nil {
-		println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
-		return
-	}
-	println(tok.Subject)
-	name, err := h.authModel.getUserName(tok.Subject)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to get name"})
-		return
-	}
-
-	userInfoRes := UserInfo{Name: name}
-
-	res := LoginRes{tokens.Access, false, userInfoRes}
-
-	println(res.UserInfo.Name)
-	setCookie(c, tokens.Refresh)
-	c.JSON(http.StatusOK, res)
-}
-
-func (h *AuthHandler) loginGoogle(c *gin.Context) {
-
+func (h *AuthHandler) oAuthLogin(c *gin.Context) {
 	var code oAuthPayload
 	if err := c.ShouldBindJSON(&code); err != nil {
-		println("failed parse")
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
 
-	userInfo, err := oauth.ExchangeCode(code.Code, oauth.GOOGLE)
+	userInfo, err := oauth.ExchangeCode(code.Code, code.Provider)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
@@ -186,8 +73,6 @@ func (h *AuthHandler) handleUserLogin(userInfo UserInfo, deviceCode string, c *g
 		new = true
 
 		if err != nil {
-			println("failed insertion")
-			println(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 			return
 		}
@@ -200,7 +85,6 @@ func (h *AuthHandler) handleUserLogin(userInfo UserInfo, deviceCode string, c *g
 	}
 
 	if err := h.authModel.setDeviceCode(user_id, deviceCode); err != nil {
-		println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
@@ -222,7 +106,6 @@ func (h *AuthHandler) accessToken(c *gin.Context) {
 
 	reqToken, err := c.Cookie("linkedOut-refresh")
 	if err != nil {
-		println(err.Error())
 		c.JSON(http.StatusForbidden, gin.H{"message": "invalid Refresh"})
 		return
 	}
