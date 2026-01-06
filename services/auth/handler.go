@@ -23,7 +23,6 @@ func (h *AuthHandler) devLogin(c *gin.Context) {
 
 	var code oAuthPayload
 	if err := c.ShouldBindJSON(&code); err != nil {
-		println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
@@ -52,7 +51,6 @@ func (h *AuthHandler) linkedinRedirect(c *gin.Context) {
 func (h *AuthHandler) oAuthLogin(c *gin.Context) {
 	var code oAuthPayload
 	if err := c.ShouldBindJSON(&code); err != nil {
-		println("failed parse")
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
@@ -75,8 +73,6 @@ func (h *AuthHandler) handleUserLogin(userInfo UserInfo, deviceCode string, c *g
 		new = true
 
 		if err != nil {
-			println("failed insertion")
-			println(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 			return
 		}
@@ -89,7 +85,6 @@ func (h *AuthHandler) handleUserLogin(userInfo UserInfo, deviceCode string, c *g
 	}
 
 	if err := h.authModel.setDeviceCode(user_id, deviceCode); err != nil {
-		println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
 		return
 	}
@@ -111,7 +106,6 @@ func (h *AuthHandler) accessToken(c *gin.Context) {
 
 	reqToken, err := c.Cookie("linkedOut-refresh")
 	if err != nil {
-		println(err.Error())
 		c.JSON(http.StatusForbidden, gin.H{"message": "invalid Refresh"})
 		return
 	}

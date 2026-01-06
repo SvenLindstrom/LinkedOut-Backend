@@ -30,7 +30,6 @@ func loadConf(args []string) {
 				log.Fatal("failed to load .env file")
 			}
 		}
-
 	}
 }
 
@@ -57,9 +56,5 @@ func main() {
 	requests.Routes(api, redis, pg)
 	user.Routes(api, pg)
 
-	if os.Getenv("DOMAIN") == "TRUE" {
-		r.RunTLS(PORT, "cert", "key")
-	} else {
-		r.Run(PORT)
-	}
+	r.Run(PORT)
 }
