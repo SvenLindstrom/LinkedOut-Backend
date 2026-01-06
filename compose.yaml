@@ -15,10 +15,20 @@ services:
       timeout: 3s
       retries: 5
 
+  redis:
+    image: redis
+    networks:
+      - linkedOut_net
+    expose:
+      - "6379"
+    env_file: ".env"
+
   linkedout:
     build:
       context: .
       dockerfile: Dockerfile
+    volumes:
+      - ./firebase_key.json:/app/firebase_key.json
     env_file: ".env"
     ports:
       - "3113:3113"

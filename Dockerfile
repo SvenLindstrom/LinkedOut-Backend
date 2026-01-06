@@ -15,6 +15,6 @@ FROM debian:bookworm-slim
 WORKDIR /app
 
 COPY --from=builder /app/linkedOutServer .
-
+ENV GOOGLE_APPLICATION_CREDENTIALS=./firebase_key.json
 
 CMD ["./linkedOutServer"]
